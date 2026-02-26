@@ -6,6 +6,10 @@
   --button-primary-hover: #383838;
   --button-secondary-hover: #f2f2f2;
 
+  background-color: #96b5eb;
+
+
+
   display: grid;
   grid-template-rows: 20px 1fr 20px;
   align-items: center;
@@ -47,6 +51,7 @@
 .main li:not(:last-of-type) {
   margin-bottom: 8px;
 }
+
 
 .main code {
   font-family: inherit;
