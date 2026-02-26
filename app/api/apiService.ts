@@ -30,7 +30,9 @@ export class ApiService {
       let errorDetail = res.statusText;
       try {
         const errorInfo = await res.json();
-        if (errorInfo?.message) {
+        if (errorInfo?.reason) {
+          errorDetail = errorInfo.reason;
+        } else if (errorInfo?.message) {
           errorDetail = errorInfo.message;
         } else {
           errorDetail = JSON.stringify(errorInfo);

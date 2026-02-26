@@ -8,12 +8,14 @@ import { Button, Form, Input } from "antd";
 // Optionally, you can import a CSS module or file for additional styling:
 // import styles from "@/styles/page.module.css";
 
-type LoginFormValues = {
+type RegisterFormValues = {
   username: string;
+  name: string;
   password: string;
+  bio: string;
 };
 
-const Login: React.FC = () => {
+const Register: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
   const [form] = Form.useForm();
@@ -27,27 +29,23 @@ const Login: React.FC = () => {
   } = useLocalStorage<string>("token", ""); // note that the key we are selecting is "token" and the default value we are setting is an empty string
   // if you want to pick a different token, i.e "usertoken", the line above would look as follows: } = useLocalStorage<string>("usertoken", "");
 
-  const handleLogin = async (values: LoginFormValues) => {
+  const handleRegister = async (values: RegisterFormValues) => {
     try {
       // Call the API service and let it handle JSON serialization and error handling
-      const response = await apiService.post<User>("/login", values);
+      const response = await apiService.post<User>("/users", values);
 
       // Use the useLocalStorage hook that returned a setter function (setToken in line 41) to store the token if available
       if (response.token) {
         setToken(response.token);
       }
 
-      // go to profile (recommended)
-      if (response.id != null) {
-        router.push(`/users/${response.id}`);
-      } else {
-        router.push("/users");
-      }
+      // Navigate to the user overview
+      router.push(`/users/${response.id}`);
     } catch (error) {
       if (error instanceof Error) {
-        alert(`Something went wrong during the login:\n${error.message}`);
+        alert(`Something went wrong during the Register:\n${error.message}`);
       } else {
-        console.error("An unknown error occurred during login.");
+        console.error("An unknown error occurred during Register.");
       }
     }
   };
@@ -56,10 +54,10 @@ const Login: React.FC = () => {
     <div className="login-container">
       <Form
         form={form}
-        name="login"
+        name="register"
         size="large"
         variant="outlined"
-        onFinish={handleLogin}
+        onFinish={handleRegister}
         layout="vertical"
       >
         <Form.Item
@@ -69,6 +67,15 @@ const Login: React.FC = () => {
         >
           <Input placeholder="Enter username" />
         </Form.Item>
+
+        <Form.Item
+          name="name"
+          label="Name"
+          rules={[{ required: true, message: "Please input your name!" }]}
+        >
+          <Input placeholder="Enter name" />
+        </Form.Item>
+
         <Form.Item
           name="password"
           label="Password"
@@ -76,9 +83,24 @@ const Login: React.FC = () => {
         >
           <Input.Password placeholder="Enter password" />
         </Form.Item>
+
+        <Form.Item
+          name="bio"
+          label="Bio"
+          rules={[{ required: true, message: "Please input a short bio!" }]}
+        >
+          <Input.TextArea placeholder="Short bio" maxLength={200} showCount />
+        </Form.Item>
+
         <Form.Item>
           <Button type="primary" htmlType="submit" className="login-button">
-            Login
+            Register
+          </Button>
+        </Form.Item>
+
+        <Form.Item>
+          <Button type="default" onClick={() => router.push("/login")} block>
+            Back to Login
           </Button>
         </Form.Item>
       </Form>
@@ -86,4 +108,5 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+
+export default Register;
