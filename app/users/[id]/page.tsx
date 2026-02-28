@@ -24,6 +24,8 @@ const UserProfile: React.FC = () => {
   const params = useParams<{ id: string }>(); //if the URL is /users/7, params.id is "7" (string).
   const apiService = useApi();
   const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false); // <- important
+
 
 
   const { value: token, clear: clearToken } =
@@ -37,16 +39,20 @@ const UserProfile: React.FC = () => {
 
 
 useEffect(() => {
-  const fetchUsers = async () => {
-    try {
-      // wait until localStorage finished loading
-      if (token === null) return;
 
-      // no token → redirect
-      if (!token) {
-        router.push("/login");
-        return;
-      }
+    if (token === null) return;
+
+    // 2) token read, so auth check is done
+    setAuthChecked(true);
+
+    // 3) no token => go login
+    if (!token) {
+      router.push("/login");
+      return;}
+
+  const fetchUsers = async () => {
+    
+    try {
 
       const users: User[] = await apiService.get<User[]>("/users");
       console.log("Fetched users:", users);
@@ -74,6 +80,23 @@ useEffect(() => {
   // if the dependency array is left empty, the useEffect will trigger exactly once
   // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
   // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies
+
+
+if (!authChecked) {
+  return (
+    <div className="card-container">
+      <Card loading title="Checking authentication..." />
+    </div>
+  );
+}
+
+if (!token) {
+  return (
+    <div className="card-container">
+      <Card loading title="Redirecting to login..." />
+    </div>
+  );
+}
 
 
   return (

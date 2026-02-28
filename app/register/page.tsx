@@ -29,26 +29,34 @@ const Register: React.FC = () => {
   } = useLocalStorage<string>("token", ""); // note that the key we are selecting is "token" and the default value we are setting is an empty string
   // if you want to pick a different token, i.e "usertoken", the line above would look as follows: } = useLocalStorage<string>("usertoken", "");
 
-  const handleRegister = async (values: RegisterFormValues) => {
-    try {
-      // Call the API service and let it handle JSON serialization and error handling
-      const response = await apiService.post<User>("/users", values);
+const handleRegister = async (values: RegisterFormValues) => {
+  try {
+    // 1) Register (creates user, NO token)
+    const created = await apiService.post<User>("/users", values);
 
-      // Use the useLocalStorage hook that returned a setter function (setToken in line 41) to store the token if available
-      if (response.token) {
-        setToken(response.token);
-      }
+    // 2) Login (returns token)
+    const loginResponse = await apiService.post<User>("/login", {
+      username: values.username,
+      password: values.password,
+    });
 
-      // Navigate to the user overview
-      router.push(`/users/${response.id}`);
-    } catch (error) {
-      if (error instanceof Error) {
-        alert(`Something went wrong during the Register:\n${error.message}`);
-      } else {
-        console.error("An unknown error occurred during Register.");
-      }
+    // 3) Store token
+    if (!loginResponse.token) {
+      throw new Error("Login succeeded but no token was returned.");
     }
-  };
+
+    setToken(loginResponse.token);
+
+    // 4) Go to protected page
+    router.push(`/users/${created.id}`); // or loginResponse.id if your login returns id
+  } catch (error) {
+    if (error instanceof Error) {
+      alert(`Something went wrong during the Register:\n${error.message}`);
+    } else {
+      console.error("An unknown error occurred during Register.");
+    }
+  }
+};
 
   return (
     <div className="login-container">

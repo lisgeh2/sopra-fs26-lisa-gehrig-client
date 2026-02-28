@@ -35,6 +35,7 @@ const Dashboard: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
   const [users, setUsers] = useState<User[] | null>(null);
+  
   // useLocalStorage hook example use
   // The hook returns an object with the value and two functions
   // Simply choose what you need from the hook:

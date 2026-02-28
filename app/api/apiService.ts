@@ -9,9 +9,35 @@ export class ApiService {
     this.baseURL = getApiDomain();
     this.defaultHeaders = {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
     };
   }
+
+private buildHeaders(): HeadersInit {
+  let token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  if (token) {
+    token = token.trim();
+
+    // remove accidental JSON quotes: "abc" -> abc
+    if ((token.startsWith('"') && token.endsWith('"')) ||
+        (token.startsWith("'") && token.endsWith("'"))) {
+      token = token.slice(1, -1);
+    }
+
+    // if some code still adds Bearer, strip it
+    if (token.startsWith("Bearer ")) {
+      token = token.slice("Bearer ".length).trim();
+    }
+  }
+
+  console.log("AUTH HEADER TOKEN:", token);
+
+  return {
+    ...this.defaultHeaders,
+    ...(token ? { Authorization: token } : {}),
+  };
+}
 
   /**
    * Helper function to check the response, parse JSON,
@@ -66,7 +92,7 @@ export class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "GET",
-      headers: this.defaultHeaders,
+      headers: this.buildHeaders(),
     });
     return this.processResponse<T>(
       res,
@@ -84,7 +110,7 @@ export class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "POST",
-      headers: this.defaultHeaders,
+      headers: this.buildHeaders(),
       body: JSON.stringify(data),
     });
     return this.processResponse<T>(
@@ -103,7 +129,7 @@ export class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "PUT",
-      headers: this.defaultHeaders,
+      headers: this.buildHeaders(),
       body: JSON.stringify(data),
     });
     return this.processResponse<T>(
@@ -121,7 +147,7 @@ export class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const res = await fetch(url, {
       method: "DELETE",
-      headers: this.defaultHeaders,
+      headers: this.buildHeaders(),
     });
     return this.processResponse<T>(
       res,
