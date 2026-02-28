@@ -1,6 +1,11 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { Button, Card, Table } from "antd";
+import React, { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { useApi } from "@/hooks/useApi";
+import useLocalStorage from "@/hooks/useLocalStorage";
+import { UserStatus } from "@/types/status";
+import { User } from "@/types/user";
+import { Button, Card } from "antd";
 // antd component library allows imports of types
 // Optionally, you can import a CSS module or file for additional styling:
 // import "@/styles/views/Dashboard.scss";
@@ -14,20 +19,74 @@ import { Button, Card, Table } from "antd";
 // SSR (server side rendering) has to be disabled.
 // Read more here: https://nextjs.org/docs/pages/building-your-application/rendering/server-side-rendering
 
-
-const UserProfile = () => {
+const UserProfile: React.FC = () => {
   const router = useRouter();
+  const params = useParams<{ id: string }>(); //if the URL is /users/7, params.id is "7" (string).
+  const apiService = useApi();
+  const [user, setUser] = useState<User | null>(null);
+  const {
+    // value: token, // is commented out because we dont need to know the token value for logout
+    // set: setToken, // is commented out because we dont need to set or update the token value
+    clear: clearToken, // all we need in this scenario is a method to clear the token
+  } = useLocalStorage<string>("token", ""); // if you wanted to select a different token, i.e "lobby", useLocalStorage<string>("lobby", "");
+
+  const handleLogout = (): void => {
+    // Clear token using the returned function 'clear' from the hook
+    clearToken();
+    router.push("/login");
+  };
+
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        // apiService.get<User[]> returns the parsed JSON object directly,
+        // thus we can simply assign it to our users variable.
+        const users: User[] = await apiService.get<User[]>("/users");
+        console.log("Fetched users:", users);
+
+        const matchedUser = users.find((u) => String(u.id) === params.id);
+
+        if (matchedUser) {
+          console.log("Matched user:", matchedUser);
+          setUser(matchedUser);
+        } else {
+          console.warn("No user found for id:", params.id);
+          setUser(null);
+        }
+
+      } catch (error) {
+        if (error instanceof Error) {
+          alert(`Something went wrong while fetching users:\n${error.message}`);
+        } else {
+          console.error("An unknown error occurred while fetching users.");
+        }
+      }
+    };
+
+    fetchUsers();
+  }, [apiService, params.id]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
+  // if the dependency array is left empty, the useEffect will trigger exactly once
+  // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
+  // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies
+
 
   return (
     <div className="card-container">
-      <Card title="User Profile" className="dashboard-container">
+      <Card title={`User Profile Page (ID: ${params.id})`} className="dashboard-container">
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", gap: 22 }}
           >
-            <div>Username: Max_Muster</div>
-            <div>Online Status: Online</div>
-            <div>Creation Date: 01.01.2024</div>
-            <div>Bio: Hello world</div>
-            <div> </div>
+          {user ? ( // ✅ FIXED (guard against null)
+            <>
+              <div>Username: {user.username}</div>
+              <div>Online Status: {user.status}</div>
+              <div>Bio: {user.bio || "-"}</div>
+              <div>Creation date: {user.creationDate || "-"}</div>
+              <div> </div>
+            </>
+          ) : (
+            <div>Loading user...</div> // ✅ FIXED (fallback UI)
+          )}
           </div>
     <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}> 
         <Button
