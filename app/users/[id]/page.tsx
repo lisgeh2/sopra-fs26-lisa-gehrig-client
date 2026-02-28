@@ -26,7 +26,8 @@ const UserProfile: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
 
 
-  const { value: token, clear: clearToken } = useLocalStorage<string>("token", ""); // ✅ CHANGED
+  const { value: token, clear: clearToken } =
+    useLocalStorage<string | null>("token", null);
 
   const handleLogout = (): void => {
     // Clear token using the returned function 'clear' from the hook
@@ -35,41 +36,41 @@ const UserProfile: React.FC = () => {
   };
 
 
-  useEffect(() => {
+useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      // wait until localStorage finished loading
+      if (token === null) return;
 
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-     
-    const fetchUsers = async () => {
-      try {
-        // apiService.get<User[]> returns the parsed JSON object directly,
-        // thus we can simply assign it to our users variable.
-        const users: User[] = await apiService.get<User[]>("/users");
-        console.log("Fetched users:", users);
-
-        const matchedUser = users.find((u) => String(u.id) === params.id);
-
-        if (matchedUser) {
-          console.log("Matched user:", matchedUser);
-          setUser(matchedUser);
-        } else {
-          console.warn("No user found for id:", params.id);
-          setUser(null);
-        }
-
-      } catch (error) {
-        if (error instanceof Error) {
-          alert(`Something went wrong while fetching users:\n${error.message}`);
-        } else {
-          console.error("An unknown error occurred while fetching users.");
-        }
+      // no token → redirect
+      if (!token) {
+        router.push("/login");
+        return;
       }
-    };
 
-    fetchUsers();
- }, [token, router, apiService, params.id]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
+      const users: User[] = await apiService.get<User[]>("/users");
+      console.log("Fetched users:", users);
+
+      const matchedUser = users.find((u) => String(u.id) === params.id);
+
+      if (matchedUser) {
+        console.log("Matched user:", matchedUser);
+        setUser(matchedUser);
+      } else {
+        console.warn("No user found for id:", params.id);
+        setUser(null);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(`Something went wrong while fetching users:\n${error.message}`);
+      } else {
+        console.error("An unknown error occurred while fetching users.");
+      }
+    }
+  };
+
+  fetchUsers();
+}, [token, router, apiService, params.id]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
   // if the dependency array is left empty, the useEffect will trigger exactly once
   // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
   // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies

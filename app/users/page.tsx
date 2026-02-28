@@ -38,7 +38,8 @@ const Dashboard: React.FC = () => {
   // useLocalStorage hook example use
   // The hook returns an object with the value and two functions
   // Simply choose what you need from the hook:
-  const { value: token, clear: clearToken } = useLocalStorage<string>("token", ""); // ✅ CHANGED
+  const { value: token, clear: clearToken } =
+    useLocalStorage<string | null>("token", null);
 
   const handleLogout = (): void => {
     // Clear token using the returned function 'clear' from the hook
@@ -48,11 +49,16 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      try {
-          if (!token) {
-          router.push("/login");
-          return;
-        }
+    try {
+      // wait until localStorage finished loading
+      if (token === null) return;
+
+      // no token → redirect
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
         // apiService.get<User[]> returns the parsed JSON object directly,
         // thus we can simply assign it to our users variable.
         const users: User[] = await apiService.get<User[]>("/users");
