@@ -24,11 +24,9 @@ const UserProfile: React.FC = () => {
   const params = useParams<{ id: string }>(); //if the URL is /users/7, params.id is "7" (string).
   const apiService = useApi();
   const [user, setUser] = useState<User | null>(null);
-  const {
-    // value: token, // is commented out because we dont need to know the token value for logout
-    // set: setToken, // is commented out because we dont need to set or update the token value
-    clear: clearToken, // all we need in this scenario is a method to clear the token
-  } = useLocalStorage<string>("token", ""); // if you wanted to select a different token, i.e "lobby", useLocalStorage<string>("lobby", "");
+
+
+  const { value: token, clear: clearToken } = useLocalStorage<string>("token", ""); // ✅ CHANGED
 
   const handleLogout = (): void => {
     // Clear token using the returned function 'clear' from the hook
@@ -38,6 +36,12 @@ const UserProfile: React.FC = () => {
 
 
   useEffect(() => {
+
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+     
     const fetchUsers = async () => {
       try {
         // apiService.get<User[]> returns the parsed JSON object directly,
@@ -65,7 +69,7 @@ const UserProfile: React.FC = () => {
     };
 
     fetchUsers();
-  }, [apiService, params.id]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
+ }, [token, router, apiService, params.id]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
   // if the dependency array is left empty, the useEffect will trigger exactly once
   // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
   // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies
@@ -88,13 +92,21 @@ const UserProfile: React.FC = () => {
             <div>Loading user...</div> // ✅ FIXED (fallback UI)
           )}
           </div>
-    <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}> 
+
+
+    <div style={{ display: "flex", justifyContent: "center", marginTop: 20, gap: 12, }}> 
         <Button
           type="primary"
           onClick={() => router.push("/users")}
         >
           Users Overview
         </Button>
+          <Button
+            danger
+            onClick={handleLogout}
+          >
+            Logout
+          </Button>
       </div>
       </Card>
     </div>
