@@ -123,7 +123,9 @@ return (
                 style: { cursor: "pointer" },
               })}
             />
-            <Button onClick={handleLogout} type="primary">
+            <Button 
+            danger
+            onClick={handleLogout}>
               Logout
             </Button>
           </>
