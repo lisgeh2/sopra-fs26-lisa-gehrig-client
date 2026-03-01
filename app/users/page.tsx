@@ -31,16 +31,19 @@ const columns: TableProps<User>["columns"] = [
   },
 ];
 
+
 const Dashboard: React.FC = () => {
   const router = useRouter();
   const apiService = useApi();
   const [users, setUsers] = useState<User[] | null>(null);
+  const [renderfinished, setRenderFinished] = useState(false);
+  const {value: token} = useLocalStorage<string>("token", ""); 
+  const {clear: clearToken} = useLocalStorage<string>("token", ""); 
   
   // useLocalStorage hook example use
   // The hook returns an object with the value and two functions
   // Simply choose what you need from the hook:
-  const { value: token, clear: clearToken } =
-    useLocalStorage<string | null>("token", null);
+
 
   const handleLogout = (): void => {
     // Clear token using the returned function 'clear' from the hook
@@ -49,17 +52,20 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
+    setRenderFinished(true);
+  }, []);
+
+  useEffect(() => {
+    if (!renderfinished) return;
+    
+    if (token == "") {
+      router.push("/login");
+      return;
+    }
+
+
     const fetchUsers = async () => {
     try {
-      // wait until localStorage finished loading
-      if (token === null) return;
-
-      // no token → redirect
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
         // apiService.get<User[]> returns the parsed JSON object directly,
         // thus we can simply assign it to our users variable.
         const users: User[] = await apiService.get<User[]>("/users");
@@ -76,16 +82,28 @@ const Dashboard: React.FC = () => {
 
     fetchUsers();
   },[
-    token,      // ✅ ADDED: re-run if token changes (login/logout)
-    apiService, // ✅ same dependency
-    router,     // ✅ ADDED: used inside effect
-  ]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
+    renderfinished, token, apiService, router,]);
   // if the dependency array is left empty, the useEffect will trigger exactly once
   // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
   // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies
   
-  
-  
+
+// CHANGED: UI states now match the real flow
+if (!renderfinished) {
+  return (
+    <div className="card-container">
+      <Card loading title="Checking authentication..." />
+    </div>
+  );
+}
+
+if (token == "") {
+return (
+  <div className="card-container">
+    <Card loading title="Redirecting to login..." />
+  </div>
+);
+}
   return (
     <div className="card-container">
       <Card
