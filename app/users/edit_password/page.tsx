@@ -67,6 +67,7 @@ const UserProfile: React.FC = () => {
 
   const handlePasswordChange = async (values: UserPostPasswordDTO) => {
   try {
+    console.log("values:", values);
     await apiService.post("/edit_password", values); // ✅ CHANGED: values is now defined
     alert("Password changed. Please log in again.");
     handleLogout(); // optional but sane after password change
@@ -110,18 +111,18 @@ if (token == "") {
         layout="vertical"
       >
         <Form.Item
-          name="oldpassword"
+          name="claimed_oldpassword"
           label="old password"
           rules={[{ required: true, message: "Please input your old password!" }]}
         >
           <Input placeholder="Enter old password" />
         </Form.Item>
         <Form.Item
-          name="nwpassword"
+          name="claimed_newpassword"
           label="new password"
           rules={[{ required: true, message: "Please input your new password!" }]}
         >
-          <Input.Password password placeholder="Enter new password" />
+          <Input.Password placeholder="Enter new password" />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" className="login-button">

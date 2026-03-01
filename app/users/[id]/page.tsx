@@ -45,7 +45,7 @@ useEffect(() => {
 
 useEffect(() => {
     if (!renderfinished) return;
-    
+
     if (!token) {
       router.push("/login");
       return;
@@ -127,6 +127,12 @@ if (token == "") {
           onClick={() => router.push("/users")}
         >
           Users Overview
+        </Button>
+        <Button
+          ghost
+          onClick={() => router.push("/users/edit_password")}
+        >
+          Change your Password
         </Button>
           <Button
             danger
