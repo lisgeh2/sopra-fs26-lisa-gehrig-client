@@ -24,12 +24,12 @@ const UserProfile: React.FC = () => {
   const params = useParams<{ id: string }>(); //if the URL is /users/7, params.id is "7" (string).
   const apiService = useApi();
   const [user, setUser] = useState<User | null>(null);
-  const [authChecked, setAuthChecked] = useState(false); // <- important
+  const [renderfinished, setRenderFinished] = useState(false);
 
+  const {value: token} = useLocalStorage<string>("token", ""); 
+  const {clear: clearToken} = useLocalStorage<string>("token", ""); 
+  
 
-
-  const { value: token, clear: clearToken } =
-    useLocalStorage<string | null>("token", null);
 
   const handleLogout = (): void => {
     // Clear token using the returned function 'clear' from the hook
@@ -39,16 +39,18 @@ const UserProfile: React.FC = () => {
 
 
 useEffect(() => {
+  setRenderFinished(true);
+}, []);
 
-    if (token === null) return;
 
-    // 2) token read, so auth check is done
-    setAuthChecked(true);
-
-    // 3) no token => go login
+useEffect(() => {
+    if (!renderfinished) return;
+    
     if (!token) {
       router.push("/login");
-      return;}
+      return;
+    }
+
 
   const fetchUsers = async () => {
     
@@ -76,21 +78,22 @@ useEffect(() => {
   };
 
   fetchUsers();
-}, [token, router, apiService, params.id]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
+}, [renderfinished, token, router, apiService, params.id]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
   // if the dependency array is left empty, the useEffect will trigger exactly once
   // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
   // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies
 
 
-if (!authChecked) {
-  return (
-    <div className="card-container">
-      <Card loading title="Checking authentication..." />
-    </div>
-  );
-}
+  // CHANGED: UI states now match the real flow
+  if (!renderfinished) {
+    return (
+      <div className="card-container">
+        <Card loading title="Checking authentication..." />
+      </div>
+    );
+  }
 
-if (!token) {
+if (token == "") {
   return (
     <div className="card-container">
       <Card loading title="Redirecting to login..." />
