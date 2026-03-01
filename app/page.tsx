@@ -10,6 +10,7 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
         <Image
           className={styles.logo}
           src="/next.svg"
@@ -18,6 +19,15 @@ export default function Home() {
           height={38}
           priority
         />
+        <Image
+          className={styles.logo}
+          src="/DB_yey_p.svg"
+          alt="DB_yey_p"
+          width={200}
+          height={100}
+          priority
+        />
+        </div>
         <ol>
           <li>
             <code>app/page.tsx</code>{" "}
@@ -79,6 +89,13 @@ export default function Home() {
             onClick={() => router.push("/login")}
           >
             Go to login
+          </Button>
+          <Button
+            type="primary"
+            variant="solid"
+            onClick={() => router.push("/register")}
+          >
+            Go to register
           </Button>
         </div>
       </main>
