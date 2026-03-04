@@ -130,7 +130,7 @@ if (token == "") {
         </Button>
         <Button
           ghost
-          onClick={() => router.push("/users/edit_password")}
+          onClick={() => router.push("/edit_password")}
         >
           Change your Password
         </Button>
