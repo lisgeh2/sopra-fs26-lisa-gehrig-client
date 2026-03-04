@@ -68,7 +68,7 @@ const UserProfile: React.FC = () => {
   const handlePasswordChange = async (values: UserPostPasswordDTO) => {
   try {
     console.log("values:", values);
-    await apiService.post("users/edit_password", values); // ✅ CHANGED: values is now defined
+    await apiService.post("/edit_password", values); // ✅ CHANGED: values is now defined
     alert("Password changed. Please log in again.");
     handleLogout(); // optional but sane after password change
 
