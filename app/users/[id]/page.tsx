@@ -31,11 +31,17 @@ const UserProfile: React.FC = () => {
   
 
 
-  const handleLogout = (): void => {
-    // Clear token using the returned function 'clear' from the hook
+const handleLogout = async (): Promise<void> => {
+  try {
+    await apiService.post("/logout", {}); // body can be {} (or change ApiService to allow no body)
+  } catch (e) {
+    // even if this fails, still clear local token
+    console.warn("Logout API failed:", e);
+  } finally {
     clearToken();
     router.push("/login");
-  };
+  }
+};
 
 
 useEffect(() => {
