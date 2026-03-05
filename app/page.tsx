@@ -19,14 +19,6 @@ export default function Home() {
           height={38}
           priority
         />
-        <Image
-          className={styles.logo}
-          src="/DB_yey_p.svg"
-          alt="DB_yey_p"
-          width={200}
-          height={100}
-          priority
-        />
         </div>
         <ol>
           <li>
