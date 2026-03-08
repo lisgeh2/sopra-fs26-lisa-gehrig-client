@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import { UserStatus } from "@/types/status";
 import { User } from "@/types/user";
 import { Button, Card } from "antd";
 // antd component library allows imports of types
@@ -25,6 +24,7 @@ const UserProfile: React.FC = () => {
   const apiService = useApi();
   const [user, setUser] = useState<User | null>(null);
   const [renderfinished, setRenderFinished] = useState(false);
+  const [isOwnPage, setIsOwnPage] = useState(false);
 
   const {value: token} = useLocalStorage<string>("token", ""); 
   const {clear: clearToken} = useLocalStorage<string>("token", ""); 
@@ -57,34 +57,30 @@ useEffect(() => {
       return;
     }
 
+    const fetchProfileData = async () => {
+      try {
+        // Fetch the user whose page is being visited
+        const profileUser = await apiService.get<User>(`/users/${params.id}`);
+        setUser(profileUser);
 
-  const fetchUsers = async () => {
-    
-    try {
+        // Fetch the currently authenticated user via token
+        const tokenUser = await apiService.get<User>("/token");
 
-      const users: User[] = await apiService.get<User[]>("/users");
-      console.log("Fetched users:", users);
-
-      const matchedUser = users.find((u) => String(u.id) === params.id);
-
-      if (matchedUser) {
-        console.log("Matched user:", matchedUser);
-        setUser(matchedUser);
-      } else {
-        console.warn("No user found for id:", params.id);
+        // Compare IDs
+        setIsOwnPage(String(tokenUser.id) === String(params.id));
+      } catch (error) {
+        if (error instanceof Error) {
+          alert(`Something went wrong while fetching user data:\n${error.message}`);
+        } else {
+          console.error("An unknown error occurred while fetching user data.");
+        }
         setUser(null);
+        setIsOwnPage(false);
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        alert(`Something went wrong while fetching users:\n${error.message}`);
-      } else {
-        console.error("An unknown error occurred while fetching users.");
-      }
-    }
-  };
+    };
 
-  fetchUsers();
-}, [renderfinished, token, router, apiService, params.id]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
+    fetchProfileData();
+  }, [renderfinished, token, router, apiService, params.id]); // dependency apiService does not re-trigger the useEffect on every render because the hook uses memoization (check useApi.tsx in the hooks).
   // if the dependency array is left empty, the useEffect will trigger exactly once
   // if the dependency array is left away, the useEffect will run on every state change. Since we do a state change to users in the useEffect, this results in an infinite loop.
   // read more here: https://react.dev/reference/react/useEffect#specifying-reactive-dependencies
@@ -127,19 +123,17 @@ if (token == "") {
           </div>
 
 
-    <div style={{ display: "flex", justifyContent: "center", marginTop: 20, gap: 12, }}> 
-        <Button
-          type="primary"
-          onClick={() => router.push("/users")}
-        >
-          Users Overview
-        </Button>
-        <Button
-          ghost
-          onClick={() => router.push("/edit_password")}
-        >
-          Change your Password
-        </Button>
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 20, gap: 12 }}>
+          <Button type="primary" onClick={() => router.push("/users")}>
+            Users Overview
+          </Button>
+
+          {isOwnPage && (
+            <Button ghost onClick={() => router.push("/edit_password")}>
+              Change your Password
+            </Button>
+          )}
+
           <Button
             danger
             onClick={handleLogout}
